@@ -1,0 +1,15 @@
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  name          String?
+  sessions      Session[]
+  // ... เพิ่มเติมได้
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  sessionToken  String   @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires       DateTime
+}
