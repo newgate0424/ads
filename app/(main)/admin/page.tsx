@@ -120,17 +120,17 @@ export default function AdminPage() {
                          {loading ? (
                             <div className="space-y-2 pt-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
                         ) : (
-                            <div className="border rounded-md max-h-[400px] overflow-y-auto">
+                            <div className="max-h-[400px] overflow-y-auto">
                                 <Table>
-                                    <TableHeader className="sticky top-0 bg-background">
-                                        <TableRow>
+                                    <TableHeader>
+                                        <TableRow className="border-b hover:bg-transparent">
                                             <TableHead>Username</TableHead>
                                             <TableHead>Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {data?.allUsers?.map((user) => (
-                                            <TableRow key={user.username}>
+                                            <TableRow key={user.username} className="border-none">
                                                 <TableCell className="font-medium">{user.username}</TableCell>
                                                 <TableCell><StatusBadge lastSeen={user.last_seen} /></TableCell>
                                             </TableRow>
@@ -151,10 +151,10 @@ export default function AdminPage() {
                          {loading ? (
                             <div className="space-y-2 pt-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
                         ) : (
-                            <div className="border rounded-md max-h-[400px] overflow-y-auto">
+                            <div className="max-h-[400px] overflow-y-auto">
                                 <Table>
-                                    <TableHeader className="sticky top-0 bg-background">
-                                        <TableRow>
+                                    <TableHeader>
+                                        <TableRow className="border-b hover:bg-transparent">
                                             <TableHead>ผู้ใช้</TableHead>
                                             <TableHead>การกระทำ</TableHead>
                                             <TableHead>เวลา</TableHead>
@@ -162,14 +162,10 @@ export default function AdminPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {data?.activityLogs?.map((log, index) => (
-                                            <TableRow key={index}>
+                                            <TableRow key={index} className="border-none">
                                                 <TableCell className="font-medium">{log.username}</TableCell>
                                                 <TableCell>{log.action === 'login' ? 'เข้าสู่ระบบ' : 'เปลี่ยนรหัสผ่าน'}</TableCell>
-                                                {/* --- 🟢 ส่วนที่แก้ไข --- */}
-                                                <TableCell className="text-xs text-muted-foreground">
-                                                    {dayjs(log.created_at).format('YYYY-MM-DD HH:mm')}
-                                                </TableCell>
-                                                {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
+                                                <TableCell className="text-xs text-muted-foreground">{dayjs(log.created_at).format('YYYY-MM-DD HH:mm')}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

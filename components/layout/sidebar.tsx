@@ -15,6 +15,7 @@ const navItems = [
     { href: '/overview', label: 'Overview', icon: Home },
     { href: '/overview-beta', label: 'Overview (Beta)', icon: TestTube2 },
     { href: '/overview-beta-v2', label: 'Overview (Beta v2)', icon: TestTube },
+    { href: '/overview-beta-v3', label: 'Overview (Beta v3)', icon: TestTube },
     { href: '/dashboard', label: 'Data History', icon: History },
     { href: '/monitor', label: 'Monitor', icon: Activity },
     { href: '/admin', label: 'User Management', icon: Users },

@@ -9,8 +9,10 @@ import dayjs from 'dayjs';
 import { DateRange } from 'react-day-picker';
 import { DateRangePickerWithPresets } from '@/components/date-range-picker-with-presets';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+// ❌ ไม่ได้ใช้ Collapsible แล้ว ลบออกได้
+// import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; 
+// ❌ ไม่ได้ใช้ไอคอนแล้ว ลบออกได้
+// import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
     teamGroups,
     cpmThresholds,
@@ -21,7 +23,7 @@ import {
     calculateDailyTarget
 } from '@/lib/config';
 
-// --- Interfaces and Helper Functions ---
+// --- Interfaces and Helper Functions (ยังคงเหมือนเดิม) ---
 const formatNumber = (value: number | string, options: Intl.NumberFormatOptions = {}): string => {
     const num = Number(value);
     if (isNaN(num)) { return typeof value === 'string' ? '0' : '0'; }
@@ -54,16 +56,17 @@ const ProgressCell = memo(({ label, value, total, isCurrency = false }: { label:
         else progressBarColor = 'bg-red-500';
     }
     const displayValue = isCurrency ? `$${formatNumber(value, { maximumFractionDigits: 2 })}` : formatNumber(value);
+    const displayTotal = isCurrency ? `$${formatNumber(total, { maximumFractionDigits: 2 })}` : formatNumber(total);
     return (
-        <div className="flex flex-col w-32">
+        <div className="flex flex-col w-36">
             <div className="flex justify-between items-baseline text-xs">
-                <span className="text-muted-foreground">{label}</span>
-                <span className="font-semibold">{displayValue}</span>
+                <span className="font-semibold">{displayValue} / {displayTotal}</span>
+                <span className="font-semibold text-primary">{percentage.toFixed(1)}%</span>
             </div>
             <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted mt-1">
                 <div className={cn('h-full transition-all duration-500', progressBarColor)} style={{ width: `${Math.min(percentage, 100)}%` }}></div>
             </div>
-            <div className="text-right text-xs font-semibold text-primary mt-0.5">{percentage.toFixed(1)}%</div>
+            <div className="text-left text-xs text-muted-foreground mt-0.5">{label}</div>
         </div>
     );
 });
@@ -95,7 +98,6 @@ const StackedProgressCell = memo(({ net, wasted, total }: { net: number; wasted:
     );
 });
 
-
 const FinancialMetric = memo(({ label, value, prefix = '', suffix = '' }: { label: string, value: number, prefix?: string, suffix?: string }) => (
     <div className="flex flex-col text-right">
         <span className="text-sm font-semibold">{prefix}{formatNumber(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{suffix}</span>
@@ -103,22 +105,13 @@ const FinancialMetric = memo(({ label, value, prefix = '', suffix = '' }: { labe
     </div>
 ));
 
-// --- 🟢 ส่วนที่แก้ไข: เปลี่ยน text-right เป็น text-center ---
-const BreakdownCell = memo(({ value, total }: { value: number, total: number }) => {
-    const percentage = total > 0 ? (value / total) * 100 : 0;
-    return (
-        <div className="text-center">
-            <div className="font-semibold text-sm leading-tight">{formatNumber(value)}</div>
-            <div className="text-xs text-muted-foreground leading-tight">({percentage.toFixed(1)}%)</div>
-        </div>
-    );
-});
-// --- สิ้นสุดส่วนที่แก้ไข ---
-
+// --- 🟢 ส่วนที่แก้ไข: เปลี่ยน TeamDataRow ทั้งหมด ---
 const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    // ลบ useState ของ isOpen ออก
     const onTrack = Number(team.actual_spend) <= Number(team.planned_daily_spend);
     const totalWasted = team.silent_inquiries + team.repeat_inquiries + team.existing_user_inquiries + team.spam_inquiries + team.blocked_inquiries + team.under_18_inquiries + team.over_50_inquiries + team.foreigner_inquiries;
+    
+    // Logic การคำนวณ Chart (เหมือนเดิม)
     const financialChartData = useMemo(() => {
         const dataMap = new Map<string, { costPerDeposit?: number; deposits?: number }>();
         team.cost_per_deposit_daily.forEach(point => { dataMap.set(point.date, { ...dataMap.get(point.date), costPerDeposit: point.value }); });
@@ -141,55 +134,63 @@ const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
 
     return (
         <Fragment>
-            <CollapsibleTrigger asChild>
-                <TableRow onClick={() => setIsOpen(!isOpen)} className="cursor-pointer hover:bg-muted/80 data-[state=open]:bg-muted/80">
-                    <TableCell>
-                        <div className="flex items-center gap-3">
-                            <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', onTrack ? 'bg-green-500' : 'bg-red-500')}></span>
-                            <span className="font-semibold">{team.team_name}</span>
+            {/* แถวข้อมูลหลัก */}
+            <TableRow>
+                <TableCell>
+                    <div className="flex items-center gap-3">
+                        <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', onTrack ? 'bg-green-500' : 'bg-red-500')}></span>
+                        <span className="font-semibold">{team.team_name}</span>
+                    </div>
+                </TableCell>
+                <TableCell><ProgressCell label="ยอดทัก / แผน" value={team.total_inquiries} total={team.planned_inquiries} /></TableCell>
+                <TableCell><ProgressCell label="ใช้จ่าย / แผน" value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></TableCell>
+                <TableCell><StackedProgressCell net={team.net_inquiries} wasted={totalWasted} total={team.total_inquiries} /></TableCell>
+                <TableCell><FinancialMetric label="CPM" value={team.cpm_cost_per_inquiry} prefix="$" /></TableCell>
+                <TableCell><FinancialMetric label="ทุน/เติม" value={team.cost_per_deposit} prefix="$" /></TableCell>
+                <TableCell><FinancialMetric label="ยอดเติม" value={team.deposits_count} /></TableCell>
+                <TableCell><FinancialMetric label="ยอดเล่นใหม่" value={team.new_player_value_thb} prefix="฿" /></TableCell>
+                <TableCell><FinancialMetric label="1$ / Cover" value={team.one_dollar_per_cover} prefix="$" /></TableCell>
+            </TableRow>
+            {/* แถวรายละเอียดที่แสดงผลตลอดเวลา */}
+            <TableRow>
+                <TableCell colSpan={9} className="p-0">
+                    <div className="bg-muted/30 p-4 flex flex-col lg:flex-row gap-4">
+                        <div className="lg:w-1/5 flex flex-col">
+                            <h4 className="font-semibold text-sm mb-2">จำแนกยอดทัก</h4>
+                            <Card className="flex-grow">
+                                <CardContent className="p-3 flex flex-col gap-1.5 h-full">
+                                    <div className="flex gap-1.5 w-full flex-grow">
+                                        <SubMetricDisplay label="ทักเงียบ" value={team.silent_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="ทักซ้ำ" value={team.repeat_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="มียูส" value={team.existing_user_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="ก่อกวน" value={team.spam_inquiries} total={team.total_inquiries} />
+                                    </div>
+                                    <div className="flex gap-1.5 w-full flex-grow">
+                                        <SubMetricDisplay label="บล็อก" value={team.blocked_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="ต่ำกว่า 18" value={team.under_18_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="อายุเกิน 50" value={team.over_50_inquiries} total={team.total_inquiries} />
+                                        <SubMetricDisplay label="ต่างชาติ" value={team.foreigner_inquiries} total={team.total_inquiries} />
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
-                    </TableCell>
-                    <TableCell><ProgressCell label="ยอดทัก" value={team.total_inquiries} total={team.planned_inquiries} /></TableCell>
-                    <TableCell><ProgressCell label="ใช้จ่าย" value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></TableCell>
-                    <TableCell><StackedProgressCell net={team.net_inquiries} wasted={totalWasted} total={team.total_inquiries} /></TableCell>
-                    <TableCell><FinancialMetric label="CPM" value={team.cpm_cost_per_inquiry} prefix="$" /></TableCell>
-                    <TableCell><FinancialMetric label="ทุน/เติม" value={team.cost_per_deposit} prefix="$" /></TableCell>
-                    <TableCell><FinancialMetric label="ยอดเติม" value={team.deposits_count} /></TableCell>
-                    <TableCell><BreakdownCell value={team.silent_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.repeat_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.existing_user_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.spam_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.blocked_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.under_18_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.over_50_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell><BreakdownCell value={team.foreigner_inquiries} total={team.total_inquiries} /></TableCell>
-                    <TableCell>
-                        <div className="flex items-center justify-end">
-                            {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                    </TableCell>
-                </TableRow>
-            </CollapsibleTrigger>
-            <CollapsibleContent asChild>
-                <TableRow>
-                    <TableCell colSpan={16} className="p-0">
-                        <div className="bg-muted/30 p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div className="lg:w-4/5 grid grid-cols-1 xl:grid-cols-2 gap-4">
                             <Card>
                                 <CardHeader><CardTitle className="text-base">แนวโน้มการเงินรายวัน</CardTitle></CardHeader>
-                                <CardContent className="pt-6">
+                                <CardContent className="pt-0">
                                     {financialChartData.length > 0 ? <Chart data={financialChartData} lines={financialChartLines} /> : <div className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</div>}
                                 </CardContent>
                             </Card>
                             <Card>
                                 <CardHeader><CardTitle className="text-base">แนวโน้ม CPM รายวัน</CardTitle></CardHeader>
-                                    <CardContent className="pt-6">
+                                <CardContent className="pt-0">
                                     {cpmChartData.length > 0 ? <Chart data={cpmChartData} lines={cpmChartLine} /> : <div className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</div>}
                                 </CardContent>
                             </Card>
                         </div>
-                    </TableCell>
-                </TableRow>
-            </CollapsibleContent>
+                    </div>
+                </TableCell>
+            </TableRow>
         </Fragment>
     );
 });
@@ -250,7 +251,7 @@ export default function OverviewBetaV2Page() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">ภาพรวมรายทีม (Beta v2)</h1>
-                    <p className="text-muted-foreground">คลิกที่แต่ละแถวเพื่อดูรายละเอียดกราฟรายวัน</p>
+                    <p className="text-muted-foreground">แสดงข้อมูลรายละเอียดทั้งหมดของแต่ละทีม</p>
                 </div>
                 <DateRangePickerWithPresets initialDateRange={dateRange} onDateRangeChange={setDateRange} />
             </div>
@@ -262,47 +263,35 @@ export default function OverviewBetaV2Page() {
                         <div key={groupName}>
                             <h2 className="text-xl font-bold mb-3">{groupName}</h2>
                             <Card>
-                                <div className="overflow-x-auto"> {/* 🟢 เพิ่ม div นี้เพื่อรองรับการ scroll แนวนอน */}
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[180px] sticky left-0 bg-background z-10">ทีม</TableHead>
-                                                <TableHead>ยอดทัก / แผน</TableHead>
-                                                <TableHead>ใช้จ่าย / แผน</TableHead>
-                                                <TableHead>ยอดทักสุทธิ / เสีย</TableHead>
-                                                <TableHead className="text-right">CPM</TableHead>
-                                                <TableHead className="text-right">ทุน/เติม</TableHead>
-                                                <TableHead className="text-right">ยอดเติม</TableHead>
-                                                {/* --- 🟢 ส่วนที่แก้ไข: เพิ่ม className="text-center" และกำหนดความกว้าง --- */}
-                                                <TableHead className="text-center min-w-[70px]">ทักเงียบ</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">ทักซ้ำ</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">มียูส</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">ก่อกวน</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">บล็อก</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">ต่ำกว่า18</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">อายุเกิน50</TableHead>
-                                                <TableHead className="text-center min-w-[70px]">ต่างชาติ</TableHead>
-                                                {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
-                                                <TableHead className="w-[50px] sticky right-0 bg-background z-10"></TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {loading ? (
-                                                 Array.from({ length: teamNames.length }).map((_, i) => (
-                                                    <TableRow key={i}>
-                                                        <TableCell colSpan={16}><Skeleton className="h-12 w-full" /></TableCell>
-                                                    </TableRow>
-                                                ))
-                                            ) : (
-                                                teamsInGroup.map((team) => (
-                                                    <Collapsible asChild key={team.team_name}>
-                                                        <TeamDataRow team={team} />
-                                                    </Collapsible>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[180px]">ทีม</TableHead>
+                                            <TableHead>ยอดทัก / แผน</TableHead>
+                                            <TableHead>ใช้จ่าย / แผน</TableHead>
+                                            <TableHead>ยอดทักสุทธิ / เสีย</TableHead>
+                                            <TableHead className="text-right">CPM</TableHead>
+                                            <TableHead className="text-right">ทุน/เติม</TableHead>
+                                            <TableHead className="text-right">ยอดเติม</TableHead>
+                                            <TableHead className="text-right">ยอดเล่นใหม่</TableHead>
+                                            <TableHead className="text-right">1$ / Cover</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {loading ? (
+                                             Array.from({ length: teamNames.length }).map((_, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell colSpan={9}><Skeleton className="h-12 w-full" /></TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            teamsInGroup.map((team) => (
+                                                // --- 🟢 ส่วนที่แก้ไข: ลบ Collapsible ออก ---
+                                                <TeamDataRow key={team.team_name} team={team} />
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </Card>
                         </div>
                     );

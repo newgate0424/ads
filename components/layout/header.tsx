@@ -9,6 +9,7 @@ const pageTitles: { [key: string]: string } = {
     '/overview': 'ภาพรวมรายทีม',
     '/overview-beta': 'ภาพรวมรายทีม (Beta)',
     '/overview-beta-v2': 'ภาพรวมรายทีม (Beta v2)', // เพิ่มชื่อหน้าใหม่
+    '/overview-beta-v3': 'ภาพรวมรายทีม (Beta v3)',
     '/dashboard': 'Data History',
     '/monitor': 'Monitor',
     '/admin': 'User Management',

@@ -4,7 +4,6 @@ import { useEffect, useState, memo, useMemo, useCallback, Fragment } from 'react
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
 import { Chart, SeriesConfig } from '@/components/ui/chart';
 import dayjs from 'dayjs';
 import { DateRange } from 'react-day-picker';
@@ -22,7 +21,7 @@ import {
     calculateDailyTarget
 } from '@/lib/config';
 
-// --- Interfaces and Helper Functions (ยังคงเหมือนเดิม) ---
+// --- Interfaces and Helper Functions ---
 const formatNumber = (value: number | string, options: Intl.NumberFormatOptions = {}): string => {
     const num = Number(value);
     if (isNaN(num)) { return typeof value === 'string' ? '0' : '0'; }
@@ -30,7 +29,6 @@ const formatNumber = (value: number | string, options: Intl.NumberFormatOptions 
 };
 interface DailyDataPoint { date: string; value: number; }
 interface TeamMetric { team_name: string; planned_inquiries: number; total_inquiries: number; wasted_inquiries: number; net_inquiries: number; planned_daily_spend: number; actual_spend: number; cpm_cost_per_inquiry: number; facebook_cost_per_inquiry: number; deposits_count: number; inquiries_per_deposit: number; quality_inquiries_per_deposit: number; cost_per_deposit: number; new_player_value_thb: number; one_dollar_per_cover: number; page_blocks_7d: number; page_blocks_30d: number; silent_inquiries: number; repeat_inquiries: number; existing_user_inquiries: number; spam_inquiries: number; blocked_inquiries: number; under_18_inquiries: number; over_50_inquiries: number; foreigner_inquiries: number; cpm_cost_per_inquiry_daily: DailyDataPoint[]; deposits_count_daily: DailyDataPoint[]; cost_per_deposit_daily: DailyDataPoint[]; }
-
 
 const SubMetricDisplay = memo(({ label, value, total }: { label: string; value: number; total: number }) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
@@ -43,8 +41,6 @@ const SubMetricDisplay = memo(({ label, value, total }: { label: string; value: 
     );
 });
 
-
-// --- Component ใหม่ๆ สำหรับแสดงผลในตาราง ---
 const ProgressCell = memo(({ label, value, total, isCurrency = false }: { label: string; value: number; total: number; isCurrency?: boolean }) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
     let progressBarColor = 'bg-primary';
@@ -58,22 +54,23 @@ const ProgressCell = memo(({ label, value, total, isCurrency = false }: { label:
         else progressBarColor = 'bg-red-500';
     }
     const displayValue = isCurrency ? `$${formatNumber(value, { maximumFractionDigits: 2 })}` : formatNumber(value);
+    const displayTotal = isCurrency ? `$${formatNumber(total, { maximumFractionDigits: 2 })}` : formatNumber(total);
 
     return (
-        <div className="flex flex-col w-32">
+        <div className="flex flex-col w-36">
             <div className="flex justify-between items-baseline text-xs">
-                <span className="text-muted-foreground">{label}</span>
-                <span className="font-semibold">{displayValue}</span>
+                <span className="font-semibold">{displayValue} / {displayTotal}</span>
+                <span className="font-semibold text-primary">{percentage.toFixed(1)}%</span>
             </div>
             <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted mt-1">
                 <div className={cn('h-full transition-all duration-500', progressBarColor)} style={{ width: `${Math.min(percentage, 100)}%` }}></div>
             </div>
-            <div className="text-right text-xs font-semibold text-primary mt-0.5">{percentage.toFixed(1)}%</div>
+            <div className="text-left text-xs text-muted-foreground mt-0.5">{label}</div>
         </div>
     );
 });
 
-// --- 🟢 Component ใหม่: Stacked Progress Bar สำหรับแสดงในตาราง ---
+
 const StackedProgressCell = memo(({ net, wasted, total }: { net: number; wasted: number; total: number }) => {
     const netPercentage = total > 0 ? (net / total) * 100 : 0;
     const wastedPercentage = total > 0 ? (wasted / total) * 100 : 0;
@@ -100,7 +97,6 @@ const StackedProgressCell = memo(({ net, wasted, total }: { net: number; wasted:
         </div>
     );
 });
-// --- สิ้นสุดส่วนที่เพิ่ม ---
 
 
 const FinancialMetric = memo(({ label, value, prefix = '', suffix = '' }: { label: string, value: number, prefix?: string, suffix?: string }) => (
@@ -110,11 +106,11 @@ const FinancialMetric = memo(({ label, value, prefix = '', suffix = '' }: { labe
     </div>
 ));
 
+
 const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
     const [isOpen, setIsOpen] = useState(false);
     const onTrack = Number(team.actual_spend) <= Number(team.planned_daily_spend);
     const totalWasted = team.silent_inquiries + team.repeat_inquiries + team.existing_user_inquiries + team.spam_inquiries + team.blocked_inquiries + team.under_18_inquiries + team.over_50_inquiries + team.foreigner_inquiries;
-
     const financialChartData = useMemo(() => {
         const dataMap = new Map<string, { costPerDeposit?: number; deposits?: number }>();
         team.cost_per_deposit_daily.forEach(point => { dataMap.set(point.date, { ...dataMap.get(point.date), costPerDeposit: point.value }); });
@@ -122,7 +118,6 @@ const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
         return Array.from(dataMap.entries()).map(([date, values]) => ({ date, ...values })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [team.cost_per_deposit_daily, team.deposits_count_daily]);
     const cpmChartData = useMemo(() => team.cpm_cost_per_inquiry_daily, [team.cpm_cost_per_inquiry_daily]);
-    
     const costPerDepositThreshold = costPerDepositThresholds[team.team_name] ?? 0;
     const costPerDepositYAxisMaxVal = costPerDepositYAxisMax[team.team_name] ?? 100;
     let depositsDailyTarget = 0;
@@ -146,16 +141,14 @@ const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
                             <span className="font-semibold">{team.team_name}</span>
                         </div>
                     </TableCell>
-                    <TableCell><ProgressCell label="ยอดทัก" value={team.total_inquiries} total={team.planned_inquiries} /></TableCell>
-                    <TableCell><ProgressCell label="ใช้จ่าย" value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></TableCell>
-                    {/* --- 🟢 ส่วนที่แก้ไข: เปลี่ยนมาใช้ StackedProgressCell --- */}
-                    <TableCell>
-                        <StackedProgressCell net={team.net_inquiries} wasted={totalWasted} total={team.total_inquiries} />
-                    </TableCell>
-                    {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
+                    <TableCell><ProgressCell label="ยอดทัก / แผน" value={team.total_inquiries} total={team.planned_inquiries} /></TableCell>
+                    <TableCell><ProgressCell label="ใช้จ่าย / แผน" value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></TableCell>
+                    <TableCell><StackedProgressCell net={team.net_inquiries} wasted={totalWasted} total={team.total_inquiries} /></TableCell>
                     <TableCell><FinancialMetric label="CPM" value={team.cpm_cost_per_inquiry} prefix="$" /></TableCell>
                     <TableCell><FinancialMetric label="ทุน/เติม" value={team.cost_per_deposit} prefix="$" /></TableCell>
                     <TableCell><FinancialMetric label="ยอดเติม" value={team.deposits_count} /></TableCell>
+                    <TableCell><FinancialMetric label="ยอดเล่นใหม่" value={team.new_player_value_thb} prefix="฿" /></TableCell>
+                    <TableCell><FinancialMetric label="1$ / Cover" value={team.one_dollar_per_cover} prefix="$" /></TableCell>
                     <TableCell>
                         <div className="flex items-center justify-end">
                             {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -165,40 +158,46 @@ const TeamDataRow = memo(({ team }: { team: TeamMetric }) => {
             </CollapsibleTrigger>
             <CollapsibleContent asChild>
                 <TableRow>
-                    <TableCell colSpan={8} className="p-0">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 bg-background">
-                            <Card className="lg:col-span-1">
-                                <CardHeader>
-                                    <CardTitle className="text-base">จำแนกยอดทัก</CardTitle>
-                                    <CardDescription>
-                                        ยอดทักทั้งหมด: {formatNumber(team.total_inquiries)}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex flex-wrap gap-1.5">
-                                    <SubMetricDisplay label="ทักเงียบ" value={team.silent_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="ทักซ้ำ" value={team.repeat_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="มียูส" value={team.existing_user_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="ก่อกวน" value={team.spam_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="บล็อก" value={team.blocked_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="ต่ำกว่า 18" value={team.under_18_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="อายุเกิน 50" value={team.over_50_inquiries} total={team.total_inquiries} />
-                                    <SubMetricDisplay label="ต่างชาติ" value={team.foreigner_inquiries} total={team.total_inquiries} />
-                                </CardContent>
-                            </Card>
-                            <Card className="lg:col-span-2">
-                                <CardHeader><CardTitle className="text-base">แนวโน้มการเงินและ CPM รายวัน</CardTitle></CardHeader>
-                                <CardContent className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                                     <div>
-                                        <p className="text-sm font-semibold text-muted-foreground mb-2 text-center">ทุน/เติม และ ยอดเติม</p>
-                                        {financialChartData.length > 0 ? <Chart data={financialChartData} lines={financialChartLines} /> : <p className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</p>}
-                                    </div>
-                                     <div>
-                                        <p className="text-sm font-semibold text-muted-foreground mb-2 text-center">CPM</p>
-                                        {cpmChartData.length > 0 ? <Chart data={cpmChartData} lines={cpmChartLine} /> : <p className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</p>}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                    <TableCell colSpan={10} className="p-0">
+                        {/* --- 🟢 ส่วนที่แก้ไข Layout ใหม่ --- */}
+                        <div className="bg-muted/30 p-4 flex flex-col lg:flex-row gap-4">
+                            {/* ส่วนจำแนกยอดทัก (20%) */}
+                            <div className="lg:w-1/5 flex flex-col">
+                                <h4 className="font-semibold text-sm mb-2">จำแนกยอดทัก</h4>
+                                <Card className="flex-grow">
+                                    <CardContent className="p-3 flex flex-col gap-1.5 h-full">
+                                        <div className="flex gap-1.5 w-full flex-grow">
+                                            <SubMetricDisplay label="ทักเงียบ" value={team.silent_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="ทักซ้ำ" value={team.repeat_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="มียูส" value={team.existing_user_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="ก่อกวน" value={team.spam_inquiries} total={team.total_inquiries} />
+                                        </div>
+                                        <div className="flex gap-1.5 w-full flex-grow">
+                                            <SubMetricDisplay label="บล็อก" value={team.blocked_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="ต่ำกว่า 18" value={team.under_18_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="อายุเกิน 50" value={team.over_50_inquiries} total={team.total_inquiries} />
+                                            <SubMetricDisplay label="ต่างชาติ" value={team.foreigner_inquiries} total={team.total_inquiries} />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            {/* ส่วนกราฟ (80%) */}
+                            <div className="lg:w-4/5 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">แนวโน้มการเงินรายวัน</CardTitle></CardHeader>
+                                    <CardContent className="pt-0">
+                                        {financialChartData.length > 0 ? <Chart data={financialChartData} lines={financialChartLines} /> : <div className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</div>}
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader><CardTitle className="text-base">แนวโน้ม CPM รายวัน</CardTitle></CardHeader>
+                                    <CardContent className="pt-0">
+                                        {cpmChartData.length > 0 ? <Chart data={cpmChartData} lines={cpmChartLine} /> : <div className="text-center text-sm text-muted-foreground h-[210px] flex items-center justify-center">ไม่มีข้อมูล</div>}
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
+                         {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
                     </TableCell>
                 </TableRow>
             </CollapsibleContent>
@@ -277,15 +276,15 @@ export default function OverviewBetaPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-[200px]">ทีม</TableHead>
+                                            <TableHead className="w-[180px]">ทีม</TableHead>
                                             <TableHead>ยอดทัก / แผน</TableHead>
                                             <TableHead>ใช้จ่าย / แผน</TableHead>
-                                            {/* --- 🟢 ส่วนที่แก้ไข: เปลี่ยนชื่อคอลัมน์ --- */}
                                             <TableHead>ยอดทักสุทธิ / เสีย</TableHead>
-                                            {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
                                             <TableHead className="text-right">CPM</TableHead>
                                             <TableHead className="text-right">ทุน/เติม</TableHead>
                                             <TableHead className="text-right">ยอดเติม</TableHead>
+                                            <TableHead className="text-right">ยอดเล่นใหม่</TableHead>
+                                            <TableHead className="text-right">1$ / Cover</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -293,7 +292,7 @@ export default function OverviewBetaPage() {
                                         {loading ? (
                                              Array.from({ length: teamNames.length }).map((_, i) => (
                                                 <TableRow key={i}>
-                                                    <TableCell colSpan={8}><Skeleton className="h-12 w-full" /></TableCell>
+                                                    <TableCell colSpan={10}><Skeleton className="h-12 w-full" /></TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
