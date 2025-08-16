@@ -32,7 +32,7 @@ export default function Sidebar() {
             <aside
                 className={cn(
                     "sticky top-0 h-screen bg-background border-r flex flex-col p-2 transition-all duration-300 ease-in-out",
-                    isCollapsed ? "w-16" : "w-60"
+                    isCollapsed ? "w-18" : "w-60"
                 )}
             >
                 <div className="flex items-center p-2 mb-4">
@@ -48,13 +48,14 @@ export default function Sidebar() {
                             <TooltipTrigger asChild>
                                 <Link href={item.href}>
                                     <Button
-                                        // --- 🟢 ส่วนที่แก้ไข ---
-                                        // เปลี่ยนจากการใช้ฟังก์ชันซับซ้อน มาเป็นการเช็ค === ตรงๆ
                                         variant={pathname === item.href ? 'default' : 'ghost'}
-                                        // --- สิ้นสุดส่วนที่แก้ไข ---
-                                        className="w-full justify-start h-10 px-3"
+                                        // --- 🟢 ส่วนที่แก้ไข: ปรับการจัดวางและขนาดไอคอน ---
+                                        className={cn(
+                                            "w-full h-10 px-3",
+                                            isCollapsed ? "justify-center" : "justify-start"
+                                        )}
                                     >
-                                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                                        <item.icon className="h-6 w-6 flex-shrink-0" />
                                         <span className={cn("whitespace-nowrap ml-4", isCollapsed && "sr-only")}>{item.label}</span>
                                     </Button>
                                 </Link>
@@ -75,11 +76,15 @@ export default function Sidebar() {
                         <TooltipTrigger asChild>
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start h-10 px-3"
+                                // --- 🟢 ส่วนที่แก้ไข: ปรับการจัดวาง ---
+                                className={cn(
+                                    "w-full h-10 px-3",
+                                    isCollapsed ? "justify-center" : "justify-start"
+                                )}
                                 onClick={() => updateSidebarState(!isCollapsed)}
                             >
                                 <div className="flex-shrink-0">
-                                    {isCollapsed ? <PanelRight className="h-5 w-5" /> : <PanelLeft className="h-5 w-5" />}
+                                    {isCollapsed ? <PanelRight className="h-6 w-6" /> : <PanelLeft className="h-6 w-6" />}
                                 </div>
                                 <span className={cn("whitespace-nowrap ml-4", isCollapsed && "sr-only")}>Toggle Sidebar</span>
                             </Button>
@@ -93,8 +98,16 @@ export default function Sidebar() {
                     
                     <Tooltip>
                         <TooltipTrigger asChild>
-                             <Button variant="destructive" className="w-full justify-start h-10 px-3" onClick={() => signOut({ callbackUrl: '/' })}>
-                                <LogOut className="h-5 w-5 flex-shrink-0" />
+                             <Button 
+                                variant="destructive" 
+                                // --- 🟢 ส่วนที่แก้ไข: ปรับการจัดวาง ---
+                                className={cn(
+                                    "w-full h-10 px-3",
+                                    isCollapsed ? "justify-center" : "justify-start"
+                                )}
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                            >
+                                <LogOut className="h-6 w-6 flex-shrink-0" />
                                 <span className={cn("whitespace-nowrap ml-4", isCollapsed && "sr-only")}>Logout</span>
                             </Button>
                         </TooltipTrigger>

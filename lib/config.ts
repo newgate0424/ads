@@ -1,6 +1,18 @@
 // lib/config.ts
-
 import dayjs from 'dayjs';
+
+export const fontSizes = [
+    { name: 'เล็ก', size: '14px' },
+    { name: 'ปกติ', size: '16px' },
+    { name: 'ใหญ่', size: '18px' },
+];
+
+export const backgroundStyles = [
+    { name: 'Default', class: 'bg-gradient-default', previewClass: 'preview-gradient-default' },
+    { name: 'Ocean', class: 'bg-gradient-ocean', previewClass: 'preview-gradient-ocean' },
+    { name: 'Sunset', class: 'bg-gradient-sunset', previewClass: 'preview-gradient-sunset' },
+    { name: 'Forest', class: 'bg-gradient-forest', previewClass: 'preview-gradient-forest' },
+];
 
 export const teamGroups = {
     'Lotto': ['สาวอ้อย', 'อลิน', 'อัญญา C', 'อัญญา D'],
@@ -52,7 +64,6 @@ export const costPerDepositYAxisMax: { [key: string]: number } = {
     'Football Area(Haru)': 80,
 };
 
-// ** เพิ่มเป้าหมายยอดเติมรายเดือน **
 export const depositsMonthlyTargets: { [key: string]: number } = {
     'สาวอ้อย': 1400,
     'อลิน': 1400,
@@ -64,7 +75,6 @@ export const depositsMonthlyTargets: { [key: string]: number } = {
     'Football Area(Haru)': 450,
 };
 
-// ** ฟังก์ชันสำหรับคำนวณเป้าหมายรายวัน **
 export const calculateDailyTarget = (monthlyTarget: number, dateString: string): number => {
     const totalDaysInMonth = dayjs(dateString).daysInMonth();
     return Math.round(monthlyTarget / totalDaysInMonth);

@@ -5,11 +5,6 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  
-  // --- 🟢 เพิ่มการตั้งค่านี้เข้าไป ---
-  // ส่ง Ping ไปยังฐานข้อมูลทุกๆ 20 วินาทีบน connection ที่ไม่ได้ใช้งาน
-  // เพื่อป้องกันปัญหา Idle Timeout
-  keepAliveInitialDelay: 20000 
 });
 
 export const connection = pool;

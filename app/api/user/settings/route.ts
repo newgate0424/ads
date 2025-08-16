@@ -11,9 +11,9 @@ export async function GET() {
     }
 
     try {
-        // เพิ่ม last_filter_range เข้ามาใน SELECT
+        // --- 🟢 ส่วนที่แก้ไข: เพิ่ม font_size ---
         const [rows]: any[] = await connection.execute(
-            'SELECT sidebar_collapsed, theme, color_theme, last_filter_range FROM users WHERE username = ?',
+            'SELECT sidebar_collapsed, theme, color_theme, last_filter_range, background_style, font_size FROM users WHERE username = ?',
             [session.user.name]
         );
 
@@ -51,6 +51,7 @@ export async function PUT(req: Request) {
 
         return NextResponse.json({ message: 'Settings updated successfully' });
     } catch (error) {
+        console.error("Settings API Error:", error); // เพิ่ม log เพื่อช่วย debug
         return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
     }
 }

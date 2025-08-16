@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 10%;
+    --foreground: 222.2 84% 10%; 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 10%;
     --popover: 0 0% 100%;
@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 200 90% 50%;
-    --radius: 0.75rem;
+    --radius: 0.75rem; 
   }
 
   .dark {
@@ -50,13 +50,6 @@
 }
 
 @layer base {
-  /* --- 🟢 ส่วนที่แก้ไข --- */
-  html {
-    /* ปรับขนาดฟอนต์พื้นฐานให้เล็กลง จากเดิม 16px เป็น 14px */
-    font-size: 15px; 
-  }
-  /* --- สิ้นสุดส่วนที่แก้ไข --- */
-
   * {
     @apply border-border;
   }
@@ -68,41 +61,31 @@
 }
 
 :root {
-  &.theme-blue {
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-  }
-  &.theme-red {
-    --primary: 0 72.2% 50.6%;
-    --primary-foreground: 0 85.7% 97.3%;
-  }
-  &.theme-sky {
-    --primary: 198.2 86.8% 49.6%;
-    --primary-foreground: 210 40% 98%;
-  }
-  &.theme-green {
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 144.9 80.4% 97.1%;
-  }
-  &.theme-yellow {
-    --primary: 47.9 95.8% 53.1%;
-    --primary-foreground: 24 9.8% 10%;
-  }
-  &.theme-orange {
-    --primary: 24.6 95% 53.1%;
-    --primary-foreground: 60 9.1% 97.8%;
-  }
+  &.theme-blue { --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%; }
+  &.theme-dark-blue { --primary: 221.2 83.2% 53.3%; --primary-foreground: 210 40% 98%; }
+  &.theme-green { --primary: 142.1 76.2% 36.3%; --primary-foreground: 144.9 80.4% 97.1%; }
+  &.theme-red { --primary: 0 72.2% 50.6%; --primary-foreground: 0 85.7% 97.3%; }
+  &.theme-rose { --primary: 346.8 77.2% 49.8%; --primary-foreground: 355.7 100% 97.3%; }
+  &.theme-violet { --primary: 262.1 83.3% 57.8%; --primary-foreground: 262.1 100% 97.1%; }
+  &.theme-orange { --primary: 24.6 95% 53.1%; --primary-foreground: 60 9.1% 97.8%; }
+  &.theme-yellow { --primary: 47.9 95.8% 53.1%; --primary-foreground: 24 9.8% 10%; }
+  &.theme-slate { --primary: 215.2 27.9% 52.9%; --primary-foreground: 210 20% 98%; }
 }
 
-/* Custom Group Colors */
-:root {
-  --group-card-lotto-border: hsl(142.1 76.2% 36.3%); /* Green */
-  --group-card-bacarat-border: hsl(221.2 83.2% 53.3%); /* Blue */
-  --group-card-football-border: hsl(24.6 95% 53.1%); /* Orange */
-}
+@layer base {
+  /* Main Background Styles */
+  main.bg-gradient-default { @apply bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50; }
+  .dark main.bg-gradient-default { @apply dark:from-slate-900 dark:via-indigo-950 dark:to-purple-950; }
+  main.bg-gradient-ocean { @apply bg-gradient-to-br from-blue-100 via-teal-100 to-green-100; }
+  .dark main.bg-gradient-ocean { @apply dark:from-blue-950 via-teal-950 to-green-950; }
+  main.bg-gradient-sunset { @apply bg-gradient-to-br from-yellow-100 via-orange-200 to-red-200; }
+  .dark main.bg-gradient-sunset { @apply dark:from-yellow-950 via-orange-950 to-red-950; }
+  main.bg-gradient-forest { @apply bg-gradient-to-br from-lime-100 via-green-200 to-teal-200; }
+  .dark main.bg-gradient-forest { @apply dark:from-lime-950 via-green-950 to-teal-950; }
 
-.dark {
-  --group-card-lotto-border: hsl(142.1 76.2% 46.3%);
-  --group-card-bacarat-border: hsl(221.2 83.2% 63.3%);
-  --group-card-football-border: hsl(24.6 95% 63.1%);
+  /* Preview Classes */
+  .preview-gradient-default { @apply bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50; }
+  .preview-gradient-ocean { @apply bg-gradient-to-br from-blue-100 via-teal-100 to-green-100; }
+  .preview-gradient-sunset { @apply bg-gradient-to-br from-yellow-100 via-orange-200 to-red-200; }
+  .preview-gradient-forest { @apply bg-gradient-to-br from-lime-100 via-green-200 to-teal-200; }
 }

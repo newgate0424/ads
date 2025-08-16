@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
 import { colorThemes } from '@/lib/constants';
+import { backgroundStyles } from '@/lib/config';
 import { signOut } from 'next-auth/react';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -11,10 +12,14 @@ type SettingsContextType = {
     theme: string;
     colorTheme: string;
     timeRange: string;
+    backgroundStyle: string;
+    fontSize: string;
     updateSidebarState: (isCollapsed: boolean) => void;
     updateTheme: (theme: 'light' | 'dark' | 'system') => void;
     updateColorTheme: (colorClass: string) => void;
     updateTimeRange: (range: string) => void;
+    updateBackgroundStyle: (styleClass: string) => void;
+    updateFontSize: (size: string) => void;
     isSettingsLoading: boolean;
 };
 
@@ -25,6 +30,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const [theme, setThemeState] = useState('system');
     const [colorTheme, setColorThemeState] = useState('theme-blue');
     const [timeRange, setTimeRange] = useState('today');
+    const [backgroundStyle, setBackgroundStyle] = useState('bg-gradient-default');
+    const [fontSize, setFontSize] = useState('16px');
     const [isSettingsLoading, setIsSettingsLoading] = useState(true);
     const [showSessionExpiredDialog, setShowSessionExpiredDialog] = useState(false);
 
@@ -43,20 +50,37 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         }
     }, [showSessionExpiredDialog]);
 
+    const applyBackgroundStyle = (styleClass: string) => {
+        const mainElement = document.querySelector('main');
+        if (mainElement) {
+            backgroundStyles.forEach(style => mainElement.classList.remove(style.class));
+            mainElement.classList.add(styleClass);
+        }
+    };
+    
     useEffect(() => {
         const fetchSettings = async () => {
             try {
                 const res = await fetch('/api/user/settings');
                 if (res.ok) {
                     const data = await res.json();
+                    const defaultFontSize = '16px';
+                    const defaultBg = 'bg-gradient-default';
+
                     setIsCollapsed(!!data.sidebar_collapsed);
                     setThemeState(data.theme);
                     setColorThemeState(data.color_theme);
                     setTimeRange(data.last_filter_range || 'today');
+                    setBackgroundStyle(data.background_style || defaultBg);
+                    setFontSize(data.font_size || defaultFontSize); 
                     
                     setNextTheme(data.theme);
                     colorThemes.forEach(t => document.documentElement.classList.remove(t.class));
                     document.documentElement.classList.add(data.color_theme);
+                    
+                    applyBackgroundStyle(data.background_style || defaultBg);
+                    
+                    document.documentElement.style.fontSize = data.font_size || defaultFontSize;
                 }
             } catch (error) {
                 console.error("Failed to fetch settings:", error);
@@ -105,10 +129,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         document.documentElement.classList.add(colorClass);
         updateSetting({ color_theme: colorClass });
     };
+
+    const updateBackgroundStyle = (styleClass: string) => {
+        setBackgroundStyle(styleClass);
+        applyBackgroundStyle(styleClass);
+        updateSetting({ background_style: styleClass });
+    };
+
+    const updateFontSize = (size: string) => {
+        setFontSize(size);
+        document.documentElement.style.fontSize = size;
+        updateSetting({ font_size: size });
+    };
     
-    const value = {
-        isCollapsed, theme, colorTheme, timeRange,
-        updateSidebarState, updateTheme, updateColorTheme, updateTimeRange,
+    const value: SettingsContextType = {
+        isCollapsed, theme, colorTheme, timeRange, backgroundStyle, fontSize,
+        updateSidebarState, updateTheme, updateColorTheme, updateTimeRange, updateBackgroundStyle, updateFontSize,
         isSettingsLoading,
     };
 
@@ -134,7 +170,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export function useSettings() {
+export function useSettings(): SettingsContextType {
     const context = useContext(SettingsContext);
     if (context === undefined) {
         throw new Error('useSettings must be used within a SettingsProvider');

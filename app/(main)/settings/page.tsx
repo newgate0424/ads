@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react'; // ✅ 1. Import ไอคอนเข้ามา
+import { Eye, EyeOff } from 'lucide-react';
 
 import { useSettings } from '@/components/settings-provider';
 import { colorThemes } from '@/lib/constants';
+import { backgroundStyles, fontSizes } from '@/lib/config';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +32,15 @@ const passwordFormSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export default function SettingsPage() {
-  const { theme, updateTheme, colorTheme, updateColorTheme, isSettingsLoading } = useSettings();
+  const { 
+    theme, updateTheme, 
+    colorTheme, updateColorTheme, 
+    backgroundStyle, updateBackgroundStyle,
+    fontSize, updateFontSize,
+    isSettingsLoading 
+  } = useSettings();
+
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  
-  // ✅ 2. สร้าง State สำหรับสลับการแสดงผลรหัสผ่าน
   const [showPassword, setShowPassword] = useState({
     current: false,
     new: false,
@@ -88,13 +95,13 @@ export default function SettingsPage() {
       </div>
       <Separator />
 
-      {/* --- Card: ลักษณะที่ปรากฏ (ไม่มีการเปลี่ยนแปลง) --- */}
       <Card>
         <CardHeader>
           <CardTitle>ลักษณะที่ปรากฏ</CardTitle>
           <CardDescription>ปรับแต่งหน้าตาและสีของแอปพลิเคชัน</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Theme Mode */}
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">โหมดสี</label>
             {isSettingsLoading ? (
@@ -111,6 +118,32 @@ export default function SettingsPage() {
                 </div>
             )}
           </div>
+
+          {/* Font Size */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">ขนาดข้อความ</label>
+            {isSettingsLoading ? (
+              <div className="flex items-center space-x-2 pt-2">
+                <Skeleton className="h-10 w-20 rounded-md" />
+                <Skeleton className="h-10 w-20 rounded-md" />
+                <Skeleton className="h-10 w-20 rounded-md" />
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 pt-2">
+                {fontSizes.map((size) => (
+                  <Button 
+                    key={size.name}
+                    variant={fontSize === size.size ? 'default' : 'outline'} 
+                    onClick={() => updateFontSize(size.size)}
+                  >
+                    {size.name}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Color Theme */}
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">สีหลักของธีม</label>
              {isSettingsLoading ? (
@@ -140,10 +173,39 @@ export default function SettingsPage() {
                 </TooltipProvider>
              )}
           </div>
+          
+          {/* Background Style */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">สีพื้นหลัง</label>
+            {isSettingsLoading ? (
+              <div className="flex items-center space-x-2 pt-2">
+                <Skeleton className="h-16 w-24 rounded-md" />
+                <Skeleton className="h-16 w-24 rounded-md" />
+                <Skeleton className="h-16 w-24 rounded-md" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                {backgroundStyles.map((style) => (
+                  <div key={style.name} className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={() => updateBackgroundStyle(style.class)}
+                      className={cn(
+                        "w-full h-16 rounded-md border-2 transition-all",
+                        backgroundStyle === style.class ? 'border-primary' : 'border-border hover:border-muted-foreground'
+                      )}
+                    >
+                      <div className={cn("w-full h-full rounded-sm", style.previewClass)} />
+                    </button>
+                    <span className="text-xs font-medium">{style.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* --- Card: เปลี่ยนรหัสผ่าน (ส่วนที่แก้ไข) --- */}
+      {/* Change Password Card */}
       <Card>
         <CardHeader>
           <CardTitle>เปลี่ยนรหัสผ่าน</CardTitle>
@@ -151,8 +213,6 @@ export default function SettingsPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onPasswordSubmit)} className="space-y-4 max-w-lg">
-              
-              {/* ✅ 3. ปรับปรุง Field รหัสผ่านปัจจุบัน */}
               <FormField
                 control={form.control}
                 name="currentPassword"
@@ -171,8 +231,6 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
-
-              {/* ✅ 4. ปรับปรุง Field รหัสผ่านใหม่ */}
               <FormField
                 control={form.control}
                 name="newPassword"
@@ -191,8 +249,6 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
-
-              {/* ✅ 5. ปรับปรุง Field ยืนยันรหัสผ่านใหม่ */}
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -211,7 +267,6 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
-              
               <Button type="submit" disabled={isSavingPassword}>
                 {isSavingPassword ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
               </Button>
