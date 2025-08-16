@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { LayoutDashboard, Settings, LogOut, PanelLeft, PanelRight, Activity, Home, History, Users, TestTube2, TestTube,LineChart } from 'lucide-react';
+import { LayoutDashboard, Settings, LogOut, PanelLeft, PanelRight, Activity, Home, Users, TestTube2 } from 'lucide-react';
 import { useSettings } from '@/components/settings-provider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
@@ -14,10 +14,6 @@ import { Separator } from '@/components/ui/separator';
 const navItems = [
     { href: '/overview', label: 'Overview', icon: Home },
     { href: '/overview-beta', label: 'Overview (Beta)', icon: TestTube2 },
-    { href: '/overview-beta-v2', label: 'Overview (Beta v2)', icon: TestTube },
-    { href: '/overview-beta-v3', label: 'Overview (Beta v3)', icon: TestTube },
-    { href: '/overview-beta-v4', label: 'Overview (Beta v4)', icon: LineChart },
-    { href: '/dashboard', label: 'Data History', icon: History },
     { href: '/monitor', label: 'Monitor', icon: Activity },
     { href: '/admin', label: 'User Management', icon: Users },
     { href: '/settings', label: 'Settings', icon: Settings },
