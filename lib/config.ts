@@ -7,21 +7,29 @@ export const fontSizes = [
     { name: 'ใหญ่', size: '18px' },
 ];
 
-export const backgroundStyles = [
-    { name: 'Default', class: 'bg-gradient-default', previewClass: 'preview-gradient-default' },
-    { name: 'Ocean', class: 'bg-gradient-ocean', previewClass: 'preview-gradient-ocean' },
-    { name: 'Sunset', class: 'bg-gradient-sunset', previewClass: 'preview-gradient-sunset' },
-    { name: 'Forest', class: 'bg-gradient-forest', previewClass: 'preview-gradient-forest' },
-    { name: 'Mango', class: 'bg-gradient-mango', previewClass: 'preview-gradient-mango' },
-    { name: 'Lavender', class: 'bg-gradient-lavender', previewClass: 'preview-gradient-lavender' },
-    { name: 'Emerald', class: 'bg-gradient-emerald', previewClass: 'preview-gradient-emerald' },
-    { name: 'Crimson', class: 'bg-gradient-crimson', previewClass: 'preview-gradient-crimson' },
-    { name: 'Gray', class: 'bg-gradient-gray', previewClass: 'preview-gradient-gray' },
-    { name: 'Blue', class: 'bg-gradient-blue-theme', previewClass: 'preview-gradient-blue-theme' },
-    { name: 'Deep Blue', class: 'bg-gradient-deep-blue', previewClass: 'preview-gradient-deep-blue' },
-    { name: 'Silver', class: 'bg-gradient-silver', previewClass: 'preview-gradient-silver' },
-    { name: 'Premium', class: 'bg-gradient-premium', previewClass: 'preview-gradient-premium' },
-];
+export const backgroundStyles = {
+    'Classic': [
+        { name: 'Default', class: 'bg-gradient-default', previewClass: 'preview-gradient-default' },
+        { name: 'Ocean', class: 'bg-gradient-ocean', previewClass: 'preview-gradient-ocean' },
+        { name: 'Sunset', class: 'bg-gradient-sunset', previewClass: 'preview-gradient-sunset' },
+        { name: 'Forest', class: 'bg-gradient-forest', previewClass: 'preview-gradient-forest' },
+    ],
+    'Vivid': [
+        { name: 'Mango', class: 'bg-gradient-mango', previewClass: 'preview-gradient-mango' },
+        { name: 'Lavender', class: 'bg-gradient-lavender', previewClass: 'preview-gradient-lavender' },
+        { name: 'Emerald', class: 'bg-gradient-emerald', previewClass: 'preview-gradient-emerald' },
+        { name: 'Crimson', class: 'bg-gradient-crimson', previewClass: 'preview-gradient-crimson' },
+    ],
+    'Monochrome': [
+        { name: 'Gray', class: 'bg-gradient-gray', previewClass: 'preview-gradient-gray' },
+        { name: 'Silver', class: 'bg-gradient-silver', previewClass: 'preview-gradient-silver' },
+    ],
+    'Premium': [
+        { name: 'Blue Theme', class: 'bg-gradient-blue-theme', previewClass: 'preview-gradient-blue-theme' },
+        { name: 'Deep Blue', class: 'bg-gradient-deep-blue', previewClass: 'preview-gradient-deep-blue' },
+        { name: 'Gold', class: 'bg-gradient-premium', previewClass: 'preview-gradient-premium' },
+    ]
+};
 
 export const teamGroups = {
     'Lotto': ['สาวอ้อย', 'อลิน', 'อัญญา C', 'อัญญา D'],

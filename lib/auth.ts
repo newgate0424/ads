@@ -82,20 +82,25 @@ export const authOptions: NextAuthOptions = {
             if (session.user) {
                 (session.user as any).id = token.id;
                 
-                const [rows]: any[] = await connection.execute(
-                    'SELECT session_token FROM users WHERE id = ?',
-                    [token.id]
-                );
-                const latestToken = rows[0]?.session_token;
+                try {
+                    const [rows]: any[] = await connection.execute(
+                        'SELECT session_token FROM users WHERE id = ?',
+                        [token.id]
+                    );
+                    const latestToken = rows[0]?.session_token;
 
-                if (latestToken !== token.sessionToken) {
-                    return null as any; 
+                    if (latestToken !== token.sessionToken) {
+                        return null as any; 
+                    }
+                    
+                    await connection.execute(
+                        'UPDATE users SET last_seen = ? WHERE id = ?',
+                        [new Date(), token.id]
+                    );
+                } catch (error) {
+                    console.error("Database connection error in NextAuth session callback:", error);
+                    return null as any; // Return null session on database error
                 }
-                
-                await connection.execute(
-                    'UPDATE users SET last_seen = ? WHERE id = ?',
-                    [new Date(), token.id]
-                );
             }
             return session;
         }

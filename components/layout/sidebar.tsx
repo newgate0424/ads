@@ -31,7 +31,7 @@ export default function Sidebar() {
         <TooltipProvider delayDuration={100}>
             <aside
                 className={cn(
-                    "sticky top-0 h-screen bg-background border-r flex flex-col p-2 transition-all duration-300 ease-in-out",
+                    "sticky top-0 h-screen bg-background/80 border-r flex flex-col p-2 transition-all duration-300 ease-in-out backdrop-blur-md",
                     isCollapsed ? "w-18" : "w-60"
                 )}
             >

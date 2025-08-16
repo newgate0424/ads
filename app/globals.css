@@ -76,6 +76,10 @@
   .bg-card-transparent {
     background-color: hsl(var(--card) / 0.8);
   }
+  .bg-sidebar-glass {
+    background-color: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(16px);
+  }
 }
 
 @layer base {
