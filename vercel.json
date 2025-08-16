@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/sync?api_key=your-very-secret-sync-key",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
