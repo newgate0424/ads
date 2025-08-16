@@ -49,7 +49,7 @@ const ProgressCell = memo(({ value, total, isCurrency = false }: { value: number
     const displayTotal = isCurrency ? `$${formatNumber(total, { maximumFractionDigits: 0 })}` : formatNumber(total);
     return (
         <div className="flex flex-col w-36">
-            <div className="flex justify-between items-baseline text-xs-plus">
+            <div className="flex justify-between items-baseline text-sm">
                 <span className="font-semibold">{displayValue} / {displayTotal}</span>
                 <span className="font-semibold text-primary">{percentage.toFixed(1)}%</span>
             </div>
@@ -65,7 +65,7 @@ const StackedProgressCell = memo(({ net, wasted, total }: { net: number; wasted:
     const wastedPercentage = total > 0 ? (wasted / total) * 100 : 0;
     return (
         <div className="flex flex-col w-36">
-            <div className="flex justify-between items-baseline text-xs">
+            <div className="flex justify-between items-baseline text-sm">
                 <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-sky-500"></div>
                     <span className="font-semibold">{formatNumber(net)}</span>
@@ -79,7 +79,7 @@ const StackedProgressCell = memo(({ net, wasted, total }: { net: number; wasted:
                 <div style={{ width: `${netPercentage}%` }} className="bg-sky-500"></div>
                 <div style={{ width: `${wastedPercentage}%` }} className="bg-orange-500"></div>
             </div>
-             <div className="flex justify-between items-baseline text-xs mt-0.5">
+             <div className="flex justify-between items-baseline text-sm mt-0.5">
                 <span className="font-semibold text-primary">{netPercentage.toFixed(1)}%</span>
                 <span className="font-semibold text-muted-foreground">{wastedPercentage.toFixed(1)}%</span>
             </div>
@@ -160,23 +160,21 @@ const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType
 };
 
 export default function OverviewBetaV6Page() {
+    // --- 🟢 ส่วนที่แก้ไข: แยก State ของข้อมูลตารางและกราฟ ---
     const [tableData, setTableData] = useState<TeamMetric[]>([]);
     const [graphRawData, setGraphRawData] = useState<TeamMetric[]>([]);
+
     const [loadingTable, setLoadingTable] = useState(true);
     const [loadingGraph, setLoadingGraph] = useState(true);
     const [error, setError] = useState('');
     const [chartData, setChartData] = useState<{cpm: TransformedChartData[], costPerDeposit: TransformedChartData[], deposits: TransformedChartData[]}>({cpm: [], costPerDeposit: [], deposits: []});
     
-    const [tableDateRange, setTableDateRange] = useState<DateRange | undefined>({
-        from: dayjs().startOf('month').toDate(),
-        to: dayjs().endOf('day').toDate(),
-    });
-    const [graphDateRange, setGraphDateRange] = useState<DateRange | undefined>({
-        from: dayjs().startOf('month').toDate(),
-        to: dayjs().endOf('day').toDate(),
-    });
+    // --- 🟢 ส่วนที่แก้ไข: แยก State ของ DateRange ---
+    const [tableDateRange, setTableDateRange] = useState<DateRange | undefined>(undefined);
+    const [graphDateRange, setGraphDateRange] = useState<DateRange | undefined>(undefined);
 
-    const fetchData = useCallback(async (
+    // --- 🟢 ส่วนที่แก้ไข: ใช้ฟังก์ชัน fetchData เดียวกัน แต่เรียกแยกกัน ---
+    const fetchOverviewData = useCallback(async (
         dateRange: DateRange | undefined, 
         setData: React.Dispatch<React.SetStateAction<TeamMetric[]>>,
         setLoading: React.Dispatch<React.SetStateAction<boolean>>,
@@ -189,7 +187,9 @@ export default function OverviewBetaV6Page() {
             if (typeof window !== 'undefined') {
                 localStorage.setItem(storageKey, JSON.stringify({ from: dateRange.from, to: dateRange.to }));
             }
-            const res = await fetch(`/api/overview?startDate=${dayjs(dateRange.from).format('YYYY-MM-DD')}&endDate=${dayjs(dateRange.to).format('YYYY-MM-DD')}`);
+            const res = await fetch(`/api/overview?startDate=${dayjs(dateRange.from).format('YYYY-MM-DD')}&endDate=${dayjs(dateRange.to).format('YYYY-MM-DD')}`, {
+                cache: 'no-store' // เพิ่มเพื่อให้ข้อมูลใหม่เสมอ
+            });
             if (!res.ok) { throw new Error(`Failed to fetch overview data`); }
             const jsonData: TeamMetric[] = await res.json();
             setData(jsonData);
@@ -201,13 +201,18 @@ export default function OverviewBetaV6Page() {
         }
     }, []);
     
+    // --- 🟢 ส่วนที่แก้ไข: useEffect นี้จะทำงานแค่ครั้งเดียวตอนโหลดหน้าเว็บ ---
     useEffect(() => {
         const savedTableDate = localStorage.getItem('dateRangeFilterBetaV6Table');
         if (savedTableDate) {
             try {
                 const parsed = JSON.parse(savedTableDate);
                 setTableDateRange({ from: dayjs(parsed.from).toDate(), to: dayjs(parsed.to).toDate() });
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                setTableDateRange({ from: dayjs().startOf('month').toDate(), to: dayjs().endOf('day').toDate() });
+            }
+        } else {
+            setTableDateRange({ from: dayjs().startOf('month').toDate(), to: dayjs().endOf('day').toDate() });
         }
 
         const savedGraphDate = localStorage.getItem('dateRangeFilterBetaV6Graph');
@@ -215,18 +220,29 @@ export default function OverviewBetaV6Page() {
             try {
                 const parsed = JSON.parse(savedGraphDate);
                 setGraphDateRange({ from: dayjs(parsed.from).toDate(), to: dayjs(parsed.to).toDate() });
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                setGraphDateRange({ from: dayjs().startOf('month').toDate(), to: dayjs().endOf('day').toDate() });
+            }
+        } else {
+            setGraphDateRange({ from: dayjs().startOf('month').toDate(), to: dayjs().endOf('day').toDate() });
         }
     }, []);
 
+    // --- 🟢 ส่วนที่แก้ไข: useEffect สำหรับดึงข้อมูลตาราง (จะทำงานเมื่อ tableDateRange เปลี่ยน) ---
     useEffect(() => {
-        fetchData(tableDateRange, setTableData, setLoadingTable, 'dateRangeFilterBetaV6Table');
-    }, [tableDateRange, fetchData]);
+        if (tableDateRange) {
+            fetchOverviewData(tableDateRange, setTableData, setLoadingTable, 'dateRangeFilterBetaV6Table');
+        }
+    }, [tableDateRange, fetchOverviewData]);
 
+    // --- 🟢 ส่วนที่แก้ไข: useEffect สำหรับดึงข้อมูลกราฟ (จะทำงานเมื่อ graphDateRange เปลี่ยน) ---
     useEffect(() => {
-        fetchData(graphDateRange, setGraphRawData, setLoadingGraph, 'dateRangeFilterBetaV6Graph');
-    }, [graphDateRange, fetchData]);
+        if (graphDateRange) {
+            fetchOverviewData(graphDateRange, setGraphRawData, setLoadingGraph, 'dateRangeFilterBetaV6Graph');
+        }
+    }, [graphDateRange, fetchOverviewData]);
 
+    // --- 🟢 ส่วนที่แก้ไข: useEffect สำหรับแปลงข้อมูลกราฟ (จะทำงานเมื่อ graphRawData เปลี่ยน) ---
     useEffect(() => {
         if (graphRawData.length > 0) {
             const transformData = (dataKey: keyof TeamMetric) => {
@@ -238,9 +254,10 @@ export default function OverviewBetaV6Page() {
                             if (!dateMap.has(day.date)) {
                                 dateMap.set(day.date, { date: day.date });
                             }
-                            const entry = dateMap.get(day.date)!;
-                            // --- 🟢 ส่วนที่แก้ไข: แก้ไขการกำหนดค่าที่ผิดพลาด ---
-                            entry[team.team_name] = day.value;
+                            const entry = dateMap.get(day.date);
+                            if (entry) {
+                                entry[team.team_name] = day.value;
+                            }
                         });
                     }
                 });
@@ -251,8 +268,24 @@ export default function OverviewBetaV6Page() {
                 costPerDeposit: transformData('cost_per_deposit_daily'),
                 deposits: transformData('deposits_count_daily'),
             });
+        } else {
+            setChartData({ cpm: [], costPerDeposit: [], deposits: [] });
         }
     }, [graphRawData]);
+    
+    // --- 🟢 ส่วนที่แก้ไข: เพิ่ม Loading state ตอนที่ยังไม่มี dateRange ---
+    if (!tableDateRange || !graphDateRange) {
+        return (
+            <div className="space-y-6 p-4 sm:p-6">
+                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">ภาพรวมรายทีม</h1>
+                    </div>
+                </div>
+                <Skeleton className="h-screen w-full" />
+            </div>
+        )
+    }
 
     if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
 
@@ -261,7 +294,7 @@ export default function OverviewBetaV6Page() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">ภาพรวมรายทีม</h1>
-                    <p className="text-muted-foreground">เปรียบเทียบ KPI และกราฟรายทีมตามกลุ่ม (รวมข้อมูลจำแนก)</p>
+
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                     <div>
@@ -275,87 +308,93 @@ export default function OverviewBetaV6Page() {
                 </div>
             </div>
 
-            {(loadingTable && tableData.length === 0) ? (
-                <div className="space-y-6">
-                    <Skeleton className="h-60 w-full" />
-                </div>
-            ) : (
-                <div className="space-y-8">
-                    {Object.entries(teamGroups).map(([groupName, teamNames]) => {
-                        const teamsInGroup = tableData.filter(team => teamNames.includes(team.team_name));
-                        if (teamsInGroup.length === 0) return null;
+            <div className="space-y-8">
+                {Object.entries(teamGroups).map(([groupName, teamNames]) => {
+                    const teamsInGroup = tableData.filter(team => teamNames.includes(team.team_name));
+                    
+                    if (loadingTable) {
+                        return <Skeleton key={groupName} className="h-96 w-full" />
+                    }
 
-                        const groupMaxValues = groupYAxisMax[groupName as keyof typeof groupYAxisMax];
-
+                    if (teamsInGroup.length === 0) {
                         return (
                             <Card key={groupName} className="p-4 md:p-6">
                                 <h2 className="text-2xl font-bold mb-4">{groupName}</h2>
-                                <div className="space-y-6">
-                                    <div className="overflow-x-auto">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[180px]">ทีม</TableHead>
-                                                    <TableHead>ยอดทัก / แผน</TableHead>
-                                                    <TableHead>ใช้จ่าย / แผน</TableHead>
-                                                    <TableHead>ยอดทักสุทธิ / เสีย</TableHead>
-                                                    <TableHead className="text-right">CPM</TableHead>
-                                                    <TableHead className="text-right">ยอดเติม</TableHead>
-                                                    <TableHead className="text-right">ทุน/เติม</TableHead>
-                                                    <TableHead className="text-right">ยอดเล่นใหม่</TableHead>
-                                                    <TableHead className="text-right">1$ / Cover</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">ทักเงียบ</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">ทักซ้ำ</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">มียูส</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">ก่อกวน</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">บล็อก</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">ต่ำกว่า18</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">อายุเกิน50</TableHead>
-                                                    <TableHead className="text-center min-w-[70px]">ต่างชาติ</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {teamsInGroup.map((team) => (
-                                                    <TableRow key={team.team_name}>
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-3">
-                                                                <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', Number(team.actual_spend) <= Number(team.planned_daily_spend) ? 'bg-green-500' : 'bg-red-500')}></span>
-                                                                <span className="font-semibold">{team.team_name}</span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell><div className="text-sm"><ProgressCell value={team.total_inquiries} total={team.planned_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><ProgressCell value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><StackedProgressCell net={team.net_inquiries} wasted={team.wasted_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cpm_cost_per_inquiry} prefix="$" /></div></TableCell>
-                                                        <TableCell className="text-right font-semibold"><div className="text-sm">{formatNumber(team.deposits_count)}</div></TableCell>
-                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cost_per_deposit} prefix="$" /></div></TableCell>
-                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.new_player_value_thb} prefix="฿" /></div></TableCell>
-                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.one_dollar_per_cover} prefix="$" /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.silent_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.repeat_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.existing_user_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.spam_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.blocked_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.under_18_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.over_50_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.foreigner_inquiries} total={team.total_inquiries} /></div></TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-                                        <GroupedChart title="ต้นทุนทัก (CPM)" data={chartData.cpm} yAxisLabel="$" loading={loadingGraph} teamsToShow={teamNames} chartType="cpm" yAxisDomainMax={groupMaxValues?.cpm} />
-                                        <GroupedChart title="ต้นทุนต่อเติม" data={chartData.costPerDeposit} yAxisLabel="$" loading={loadingGraph} teamsToShow={teamNames} chartType="costPerDeposit" yAxisDomainMax={groupMaxValues?.costPerDeposit} />
-                                        <GroupedChart title="เป้ายอดเติม" data={chartData.deposits} yAxisLabel="" loading={loadingGraph} teamsToShow={teamNames} chartType="deposits" dateForTarget={graphDateRange?.from} />
-                                    </div>
-                                </div>
+                                <p className="text-muted-foreground">ไม่มีข้อมูลสำหรับกลุ่มนี้ในช่วงวันที่ที่เลือก</p>
                             </Card>
-                        );
-                    })}
-                </div>
-            )}
+                        )
+                    }
+
+                    const groupMaxValues = groupYAxisMax[groupName as keyof typeof groupYAxisMax];
+
+                    return (
+                        <Card key={groupName} className="p-4 md:p-6">
+                            <h2 className="text-2xl font-bold mb-4">{groupName}</h2>
+                            <div className="space-y-6">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-[140px]">ทีม</TableHead>
+                                                <TableHead>ยอดทัก / แผน</TableHead>
+                                                <TableHead>ใช้จ่าย / แผน</TableHead>
+                                                <TableHead>ยอดทักสุทธิ / เสีย</TableHead>
+                                                <TableHead className="text-right">CPM</TableHead>
+                                                <TableHead className="text-right">ยอดเติม</TableHead>
+                                                <TableHead className="text-right">ทุน/เติม</TableHead>
+                                                <TableHead className="text-right">ยอดเล่นใหม่</TableHead>
+                                                <TableHead className="text-right">1$ / Cover</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">ทักเงียบ</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">ทักซ้ำ</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">มียูส</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">ก่อกวน</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">บล็อก</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">ต่ำกว่า18</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">อายุเกิน50</TableHead>
+                                                <TableHead className="text-center min-w-[70px]">ต่างชาติ</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {teamsInGroup.map((team) => (
+                                                <TableRow key={team.team_name}>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className={cn('w-2.5 h-2.5 rounded-full flex-shrink-0', Number(team.actual_spend) <= Number(team.planned_daily_spend) ? 'bg-green-500' : 'bg-red-500')}></span>
+                                                            <span className="font-semibold">{team.team_name}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell><div className="text-sm"><ProgressCell value={team.total_inquiries} total={team.planned_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><ProgressCell value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><StackedProgressCell net={team.net_inquiries} wasted={team.wasted_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cpm_cost_per_inquiry} prefix="$" /></div></TableCell>
+                                                    <TableCell className="text-right font-semibold"><div className="text-sm">{formatNumber(team.deposits_count)}</div></TableCell>
+                                                    <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cost_per_deposit} prefix="$" /></div></TableCell>
+                                                    <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.new_player_value_thb} prefix="฿" /></div></TableCell>
+                                                    <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.one_dollar_per_cover} prefix="$" /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.silent_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.repeat_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.existing_user_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.spam_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.blocked_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.under_18_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.over_50_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                    <TableCell><div className="text-sm"><BreakdownCell value={team.foreigner_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                                    <GroupedChart title="ต้นทุนทัก (CPM)" data={chartData.cpm} yAxisLabel="$" loading={loadingGraph} teamsToShow={teamNames} chartType="cpm" yAxisDomainMax={groupMaxValues?.cpm} />
+                                    <GroupedChart title="ต้นทุนต่อเติม" data={chartData.costPerDeposit} yAxisLabel="$" loading={loadingGraph} teamsToShow={teamNames} chartType="costPerDeposit" yAxisDomainMax={groupMaxValues?.costPerDeposit} />
+                                    <GroupedChart title="เป้ายอดเติม" data={chartData.deposits} yAxisLabel="" loading={loadingGraph} teamsToShow={teamNames} chartType="deposits" dateForTarget={graphDateRange?.from} />
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
+            </div>
         </div>
     );
 }
