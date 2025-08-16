@@ -9,7 +9,7 @@ import { DateRange } from 'react-day-picker';
 import { DateRangePickerWithPresets } from '@/components/date-range-picker-with-presets';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { teamGroups, cpmThresholds, costPerDepositThresholds, depositsMonthlyTargets, calculateDailyTarget, cpmYAxisMax, costPerDepositYAxisMax } from '@/lib/config';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Label } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Label } from 'recharts';
 
 // --- Interfaces and Helper Functions ---
 const formatNumber = (value: number | string, options: Intl.NumberFormatOptions = {}): string => {
@@ -49,7 +49,7 @@ const ProgressCell = memo(({ value, total, isCurrency = false }: { value: number
     const displayTotal = isCurrency ? `$${formatNumber(total, { maximumFractionDigits: 0 })}` : formatNumber(total);
     return (
         <div className="flex flex-col w-36">
-            <div className="flex justify-between items-baseline text-xs">
+            <div className="flex justify-between items-baseline text-xs-plus">
                 <span className="font-semibold">{displayValue} / {displayTotal}</span>
                 <span className="font-semibold text-primary">{percentage.toFixed(1)}%</span>
             </div>
@@ -129,7 +129,6 @@ const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType
             <CardContent className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 5, right: 30, left: -10, bottom: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                         <XAxis dataKey="date" tickFormatter={(date) => dayjs(date).format('DD')} tick={{ fontSize: 10 }} />
                         <YAxis tickFormatter={formatYAxis} tick={{ fontSize: 10 }} domain={[0, yAxisDomainMax || 'auto']} />
                         <Tooltip
@@ -168,7 +167,6 @@ export default function OverviewBetaV6Page() {
     const [error, setError] = useState('');
     const [chartData, setChartData] = useState<{cpm: TransformedChartData[], costPerDeposit: TransformedChartData[], deposits: TransformedChartData[]}>({cpm: [], costPerDeposit: [], deposits: []});
     
-    // --- 🟢 ส่วนที่แก้ไข: ตั้งค่าเริ่มต้นแบบตายตัว ---
     const [tableDateRange, setTableDateRange] = useState<DateRange | undefined>({
         from: dayjs().startOf('month').toDate(),
         to: dayjs().endOf('day').toDate(),
@@ -177,7 +175,6 @@ export default function OverviewBetaV6Page() {
         from: dayjs().startOf('month').toDate(),
         to: dayjs().endOf('day').toDate(),
     });
-    // --- สิ้นสุดส่วนที่แก้ไข ---
 
     const fetchData = useCallback(async (
         dateRange: DateRange | undefined, 
@@ -204,7 +201,6 @@ export default function OverviewBetaV6Page() {
         }
     }, []);
     
-    // --- 🟢 ส่วนที่แก้ไข: เพิ่ม useEffect สำหรับ Hydration ---
     useEffect(() => {
         const savedTableDate = localStorage.getItem('dateRangeFilterBetaV6Table');
         if (savedTableDate) {
@@ -222,7 +218,6 @@ export default function OverviewBetaV6Page() {
             } catch (e) { /* ignore */ }
         }
     }, []);
-    // --- สิ้นสุดส่วนที่แก้ไข ---
 
     useEffect(() => {
         fetchData(tableDateRange, setTableData, setLoadingTable, 'dateRangeFilterBetaV6Table');
@@ -237,10 +232,14 @@ export default function OverviewBetaV6Page() {
             const transformData = (dataKey: keyof TeamMetric) => {
                 const dateMap = new Map<string, TransformedChartData>();
                 graphRawData.forEach(team => {
-                    if (Array.isArray(team[dataKey])) {
-                        (team[dataKey] as DailyDataPoint[]).forEach(day => {
-                            if (!dateMap.has(day.date)) { dateMap.set(day.date, { date: day.date }); }
+                    const dailyData = team[dataKey];
+                    if (Array.isArray(dailyData)) {
+                        (dailyData as DailyDataPoint[]).forEach(day => {
+                            if (!dateMap.has(day.date)) {
+                                dateMap.set(day.date, { date: day.date });
+                            }
                             const entry = dateMap.get(day.date)!;
+                            // --- 🟢 ส่วนที่แก้ไข: แก้ไขการกำหนดค่าที่ผิดพลาด ---
                             entry[team.team_name] = day.value;
                         });
                     }
@@ -264,7 +263,6 @@ export default function OverviewBetaV6Page() {
                     <h1 className="text-2xl font-bold tracking-tight">ภาพรวมรายทีม</h1>
                     <p className="text-muted-foreground">เปรียบเทียบ KPI และกราฟรายทีมตามกลุ่ม (รวมข้อมูลจำแนก)</p>
                 </div>
-                {/* --- 🟢 ส่วนที่แก้ไข: ย้าย Date Picker ทั้งสองมาไว้ที่นี่ --- */}
                 <div className="flex flex-col sm:flex-row gap-2">
                     <div>
                         <p className="text-xs text-muted-foreground mb-1 text-center sm:text-left">ข้อมูลตาราง</p>
@@ -325,22 +323,22 @@ export default function OverviewBetaV6Page() {
                                                                 <span className="font-semibold">{team.team_name}</span>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell><ProgressCell value={team.total_inquiries} total={team.planned_inquiries} /></TableCell>
-                                                        <TableCell><ProgressCell value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></TableCell>
-                                                        <TableCell><StackedProgressCell net={team.net_inquiries} wasted={team.wasted_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell className="text-right"><FinancialMetric value={team.cpm_cost_per_inquiry} prefix="$" /></TableCell>
-                                                        <TableCell className="text-right font-semibold">{formatNumber(team.deposits_count)}</TableCell>
-                                                        <TableCell className="text-right"><FinancialMetric value={team.cost_per_deposit} prefix="$" /></TableCell>
-                                                        <TableCell className="text-right"><FinancialMetric value={team.new_player_value_thb} prefix="฿" /></TableCell>
-                                                        <TableCell className="text-right"><FinancialMetric value={team.one_dollar_per_cover} prefix="$" /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.silent_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.repeat_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.existing_user_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.spam_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.blocked_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.under_18_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.over_50_inquiries} total={team.total_inquiries} /></TableCell>
-                                                        <TableCell><BreakdownCell value={team.foreigner_inquiries} total={team.total_inquiries} /></TableCell>
+                                                        <TableCell><div className="text-sm"><ProgressCell value={team.total_inquiries} total={team.planned_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><ProgressCell value={team.actual_spend} total={team.planned_daily_spend} isCurrency /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><StackedProgressCell net={team.net_inquiries} wasted={team.wasted_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cpm_cost_per_inquiry} prefix="$" /></div></TableCell>
+                                                        <TableCell className="text-right font-semibold"><div className="text-sm">{formatNumber(team.deposits_count)}</div></TableCell>
+                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.cost_per_deposit} prefix="$" /></div></TableCell>
+                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.new_player_value_thb} prefix="฿" /></div></TableCell>
+                                                        <TableCell className="text-right"><div className="text-sm"><FinancialMetric value={team.one_dollar_per_cover} prefix="$" /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.silent_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.repeat_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.existing_user_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.spam_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.blocked_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.under_18_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.over_50_inquiries} total={team.total_inquiries} /></div></TableCell>
+                                                        <TableCell><div className="text-sm"><BreakdownCell value={team.foreigner_inquiries} total={team.total_inquiries} /></div></TableCell>
                                                     </TableRow>
                                                 ))}
                                             </TableBody>

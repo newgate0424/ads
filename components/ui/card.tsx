@@ -5,19 +5,11 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
-      // --- 🟢 ส่วนที่แก้ไข ---
       className={cn(
-        // สไตล์กระจกฝ้า (เหมือนเดิม)
-        "bg-white/40 dark:bg-black/20 backdrop-blur-xl",
-        "border border-white/50 dark:border-white/10",
-        "rounded-2xl shadow-lg",
-        
-        // เพิ่มคลาสสำหรับ Layout กลับเข้ามา
+        "rounded-lg border bg-card text-card-foreground shadow-sm",
         "flex flex-col",
-        
         className
       )}
-      // --- สิ้นสุดส่วนที่แก้ไข ---
       {...props}
     />
   )
@@ -27,17 +19,13 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-header"
-      className={cn(
-        // เพิ่ม padding กลับเข้ามาเพื่อให้ดูสวยงาม
-        "flex flex-col space-y-1.5 p-6",
-        className
-      )}
+      className={cn("flex flex-col space-y-1.5 p-6", className)}
       {...props}
     />
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       data-slot="card-title"
@@ -47,7 +35,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+function CardDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       data-slot="card-description"
@@ -61,7 +49,6 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      // เพิ่ม padding และ flex-grow เพื่อให้เนื้อหายืดขยายได้
       className={cn("p-6 pt-0 flex-grow", className)}
       {...props}
     />

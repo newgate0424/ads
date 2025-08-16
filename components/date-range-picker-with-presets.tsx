@@ -121,7 +121,9 @@ export function DateRangePickerWithPresets({ className, onDateRangeChange, initi
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button id="date" variant={"outline"} className={cn("w-[265px] justify-center text-left font-normal", !date && "text-muted-foreground", className)}>
+                {/* --- 🟢 ส่วนที่แก้ไข --- */}
+                <Button id="date" variant={"outline"} className={cn("w-auto justify-start text-left font-normal", !date && "text-muted-foreground", className)}>
+                {/* --- สิ้นสุดส่วนที่แก้ไข --- */}
                     <CalendarIcon className="mr-1 h-4 w-4" />
                     {formatDateRange(date)}
                 </Button>
@@ -137,7 +139,6 @@ export function DateRangePickerWithPresets({ className, onDateRangeChange, initi
                                     onClick={() => handlePresetClick(preset.days, preset.label)}
                                     className="justify-start pl-0 text-sm h-8"
                                 >
-                                    {/* ✅ 1. แก้ไขสไตล์ที่นี่ */}
                                     <div className="w-4 h-4 rounded-full border border-border flex items-center justify-center mr-2">
                                         {localSelectedPreset === preset.label && (
                                             <div className="w-2 h-2 rounded-full bg-primary" />
@@ -155,7 +156,6 @@ export function DateRangePickerWithPresets({ className, onDateRangeChange, initi
                                 className="justify-start pl-0 text-sm h-8"
                                 onClick={() => handleComplexPresetClick(preset.value, preset.label)}
                             >
-                                    {/* ✅ 2. แก้ไขสไตล์ที่นี่ด้วย */}
                                     <div className="w-4 h-4 rounded-full border border-border flex items-center justify-center mr-2">
                                         {localSelectedPreset === preset.label && (
                                             <div className="w-2 h-2 rounded-full bg-primary" />

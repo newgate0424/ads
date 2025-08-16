@@ -22,6 +22,11 @@ const config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
       },
+      // --- 🟢 ส่วนที่แก้ไข ---
+      fontSize: {
+        'xs-plus': ['0.8125rem', { lineHeight: '1.125rem' }], // ~13px
+      },
+      // --- สิ้นสุดส่วนที่แก้ไข ---
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

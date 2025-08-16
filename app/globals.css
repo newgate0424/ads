@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 10%; 
+    --foreground: 222.2 84% 10%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 10%;
     --popover: 0 0% 100%;
@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 200 90% 50%;
-    --radius: 0.75rem; 
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -50,6 +50,13 @@
 }
 
 @layer base {
+  /* --- 🟢 ส่วนที่แก้ไข --- */
+  html {
+    /* ปรับขนาดฟอนต์พื้นฐานให้เล็กลง จากเดิม 16px เป็น 14px */
+    font-size: 14px; 
+  }
+  /* --- สิ้นสุดส่วนที่แก้ไข --- */
+
   * {
     @apply border-border;
   }
