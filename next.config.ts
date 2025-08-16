@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // eslint: {
-  //   // คำเตือน: การตั้งค่านี้จะปิดการตรวจสอบ ESLint ทั้งหมดระหว่าง build
-  //   // เพื่อแก้ปัญหาเฉพาะหน้าให้ deploy ผ่าน
-  //   ignoreDuringBuilds: true,
-  // },
+  // ลบ block eslint ออกทั้งหมด เพื่อให้ใช้การตั้งค่าจาก eslint.config.mjs
 };
 
 export default nextConfig;
