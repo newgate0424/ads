@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 10%; 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 10%;
+    --primary: 200 90% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 200 90% 50%;
+    --radius: 0.75rem; 
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 200 85% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 200 85% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+:root {
+  &.theme-blue { --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%; }
+  &.theme-dark-blue { --primary: 221.2 83.2% 53.3%; --primary-foreground: 210 40% 98%; }
+  &.theme-green { --primary: 142.1 76.2% 36.3%; --primary-foreground: 144.9 80.4% 97.1%; }
+  &.theme-red { --primary: 0 72.2% 50.6%; --primary-foreground: 0 85.7% 97.3%; }
+  &.theme-rose { --primary: 346.8 77.2% 49.8%; --primary-foreground: 355.7 100% 97.3%; }
+  &.theme-violet { --primary: 262.1 83.3% 57.8%; --primary-foreground: 262.1 100% 97.1%; }
+  &.theme-orange { --primary: 24.6 95% 53.1%; --primary-foreground: 60 9.1% 97.8%; }
+  &.theme-yellow { --primary: 47.9 95.8% 53.1%; --primary-foreground: 24 9.8% 10%; }
+  &.theme-slate { --primary: 215.2 27.9% 52.9%; --primary-foreground: 210 20% 98%; }
+}
+
+@layer components {
+  .bg-card-transparent {
+    background-color: hsl(var(--card) / 0.8);
+  }
+  .bg-sidebar-glass {
+    background-color: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(16px);
+  }
+}
+
+@layer base {
+  /* Main Background Styles */
+  main.bg-gradient-default { @apply bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50; }
+  .dark main.bg-gradient-default { @apply dark:from-slate-900 dark:via-indigo-950 dark:to-purple-950; }
+  main.bg-gradient-ocean { @apply bg-gradient-to-br from-blue-100 via-teal-100 to-green-100; }
+  .dark main.bg-gradient-ocean { @apply dark:from-blue-950 via-teal-950 to-green-950; }
+  main.bg-gradient-sunset { @apply bg-gradient-to-br from-yellow-100 via-orange-200 to-red-200; }
+  .dark main.bg-gradient-sunset { @apply dark:from-yellow-950 via-orange-950 to-red-950; }
+  main.bg-gradient-forest { @apply bg-gradient-to-br from-lime-100 via-green-200 to-teal-200; }
+  .dark main.bg-gradient-forest { @apply dark:from-lime-950 via-green-950 to-teal-950; }
+  main.bg-gradient-mango { @apply bg-gradient-to-br from-orange-200 via-yellow-200 to-orange-300; }
+  .dark main.bg-gradient-mango { @apply dark:from-orange-950 dark:via-yellow-950 dark:to-orange-900; }
+  main.bg-gradient-lavender { @apply bg-gradient-to-br from-purple-200 via-indigo-200 to-blue-200; }
+  .dark main.bg-gradient-lavender { @apply dark:from-purple-950 dark:via-indigo-950 dark:to-blue-950; }
+  main.bg-gradient-emerald { @apply bg-gradient-to-br from-teal-200 via-emerald-300 to-green-300; }
+  .dark main.bg-gradient-emerald { @apply dark:from-teal-950 dark:via-emerald-950 dark:to-green-950; }
+  main.bg-gradient-crimson { @apply bg-gradient-to-br from-red-200 via-rose-200 to-pink-200; }
+  .dark main.bg-gradient-crimson { @apply dark:from-red-950 dark:via-rose-950 dark:to-pink-950; }
+  /* 🟢 ส่วนที่เพิ่ม: เพิ่ม Gradient Styles ใหม่ */
+  main.bg-gradient-gray { @apply bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400; }
+  .dark main.bg-gradient-gray { @apply dark:from-gray-700 dark:via-gray-800 dark:to-gray-900; }
+  main.bg-gradient-blue-theme { @apply bg-gradient-to-br from-sky-200 via-blue-300 to-indigo-400; }
+  .dark main.bg-gradient-blue-theme { @apply dark:from-sky-950 dark:via-blue-950 dark:to-indigo-950; }
+  main.bg-gradient-deep-blue { @apply bg-gradient-to-br from-blue-800 via-indigo-900 to-purple-950; }
+  .dark main.bg-gradient-deep-blue { @apply dark:from-blue-900 dark:via-indigo-950 dark:to-purple-950; }
+  main.bg-gradient-silver { @apply bg-gradient-to-br from-slate-100 via-gray-200 to-slate-300; }
+  .dark main.bg-gradient-silver { @apply dark:from-slate-800 dark:via-gray-900 dark:to-slate-900; }
+  main.bg-gradient-premium { @apply bg-gradient-to-br from-amber-200 via-yellow-500 to-orange-600; }
+  .dark main.bg-gradient-premium { @apply dark:from-amber-950 dark:via-yellow-900 dark:to-orange-950; }
+
+  /* Preview Classes */
+  .preview-gradient-default { @apply bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50; }
+  .preview-gradient-ocean { @apply bg-gradient-to-br from-blue-100 via-teal-100 to-green-100; }
+  .preview-gradient-sunset { @apply bg-gradient-to-br from-yellow-100 via-orange-200 to-red-200; }
+  .preview-gradient-forest { @apply bg-gradient-to-br from-lime-100 via-green-200 to-teal-200; }
+  .preview-gradient-mango { @apply bg-gradient-to-br from-orange-200 via-yellow-200 to-orange-300; }
+  .preview-gradient-lavender { @apply bg-gradient-to-br from-purple-200 via-indigo-200 to-blue-200; }
+  .preview-gradient-emerald { @apply bg-gradient-to-br from-teal-200 via-emerald-300 to-green-300; }
+  .preview-gradient-crimson { @apply bg-gradient-to-br from-red-200 via-rose-200 to-pink-200; }
+  /* 🟢 ส่วนที่เพิ่ม: เพิ่ม Preview Classes ใหม่ */
+  .preview-gradient-gray { @apply bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400; }
+  .preview-gradient-blue-theme { @apply bg-gradient-to-br from-sky-200 via-blue-300 to-indigo-400; }
+  .preview-gradient-deep-blue { @apply bg-gradient-to-br from-blue-800 via-indigo-900 to-purple-950; }
+  .preview-gradient-silver { @apply bg-gradient-to-br from-slate-100 via-gray-200 to-slate-300; }
+  .preview-gradient-premium { @apply bg-gradient-to-br from-amber-200 via-yellow-500 to-orange-600; }
+}
