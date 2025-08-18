@@ -86,7 +86,6 @@ const ExchangeRateSmall = memo(() => {
             for (const apiUrl of apiSources) {
                 try {
                     const response = await fetch(apiUrl, { 
-                        timeout: 5000,
                         headers: { 'Accept': 'application/json' }
                     });
                     
