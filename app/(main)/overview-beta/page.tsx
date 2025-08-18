@@ -219,8 +219,8 @@ const BreakdownCell = memo(({ value, total }: { value: number, total: number }) 
     const percentage = total > 0 ? (value / total) * 100 : 0;
     return (
         <div className="text-center">
-            <div className="font-semibold text-sm leading-tight">{formatNumber(value)}</div>
-            <div className="text-xs text-muted-foreground leading-tight">({percentage.toFixed(1)}%)</div>
+            <div className="font-semibold text-sm leading-center">{formatNumber(value)}</div>
+            <div className="text-xs text-muted-foreground leading-center">({percentage.toFixed(1)}%)</div>
         </div>
     );
 });
