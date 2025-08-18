@@ -284,7 +284,7 @@ const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType
                             >
                                 <Label 
                                     value={`เป้า: ${coverTargets[groupName]}`} 
-                                    position="topRight" 
+                                    position="right" 
                                     fill="#ef4444" 
                                     fontSize={11}
                                     fontWeight="bold"
