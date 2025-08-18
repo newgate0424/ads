@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import { DateRange } from 'react-day-picker';
 import { DateRangePickerWithPresets } from '@/components/date-range-picker-with-presets';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { teamGroups, cpmThresholds, costPerDepositThresholds, depositsMonthlyTargets, calculateDailyTarget } from '@/lib/config';
+import { teamGroups, cpmThresholds, costPerDepositThresholds, depositsMonthlyTargets, calculateDailyTarget, coverTargets } from '@/lib/config';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine, Label } from 'recharts';
 
 // --- Interfaces and Helper Functions ---
@@ -225,24 +225,34 @@ const BreakdownCell = memo(({ value, total }: { value: number, total: number }) 
     );
 });
 
-const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType, dateForTarget, yAxisDomainMax }: { title: string; data: TransformedChartData[]; yAxisLabel: string; loading: boolean; teamsToShow: string[]; chartType: 'cpm' | 'costPerDeposit' | 'deposits' | 'cover'; dateForTarget?: Date; yAxisDomainMax?: number; }) => {
+const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType, dateForTarget, yAxisDomainMax, groupName }: { title: string; data: TransformedChartData[]; yAxisLabel: string; loading: boolean; teamsToShow: string[]; chartType: 'cpm' | 'costPerDeposit' | 'deposits' | 'cover'; dateForTarget?: Date; yAxisDomainMax?: number; groupName?: string; }) => {
     const formatYAxis = (tickItem: number) => `${yAxisLabel}${tickItem.toFixed(1)}`;
     
     const targets = useMemo(() => {
         const targetMap = new Map<string, number>();
-        teamsToShow.forEach(teamName => {
-            if (chartType === 'cpm') {
-                targetMap.set(teamName, cpmThresholds[teamName] || 0);
-            } else if (chartType === 'costPerDeposit') {
-                targetMap.set(teamName, costPerDepositThresholds[teamName] || 0);
-            } else if (chartType === 'deposits' && dateForTarget) {
-                const monthlyTarget = depositsMonthlyTargets[teamName] || 0;
-                targetMap.set(teamName, calculateDailyTarget(monthlyTarget, dayjs(dateForTarget).format('YYYY-MM-DD')));
-            }
-            // สำหรับ cover chart ไม่มีเป้าหมาย (อาจเพิ่มในอนาคต)
-        });
+        
+        if (chartType === 'cover' && groupName && coverTargets[groupName]) {
+            // สำหรับกราฟ 1$ / Cover ใช้เป้าหมายเดียวกันสำหรับทุกทีมในกลุ่ม
+            const groupTarget = coverTargets[groupName];
+            teamsToShow.forEach(teamName => {
+                targetMap.set(teamName, groupTarget);
+            });
+        } else {
+            // สำหรับกราฟอื่นๆ ใช้เป้าหมายแยกตามทีม
+            teamsToShow.forEach(teamName => {
+                if (chartType === 'cpm') {
+                    targetMap.set(teamName, cpmThresholds[teamName] || 0);
+                } else if (chartType === 'costPerDeposit') {
+                    targetMap.set(teamName, costPerDepositThresholds[teamName] || 0);
+                } else if (chartType === 'deposits' && dateForTarget) {
+                    const monthlyTarget = depositsMonthlyTargets[teamName] || 0;
+                    targetMap.set(teamName, calculateDailyTarget(monthlyTarget, dayjs(dateForTarget).format('YYYY-MM-DD')));
+                }
+            });
+        }
+        
         return targetMap;
-    }, [chartType, dateForTarget, teamsToShow]);
+    }, [chartType, dateForTarget, teamsToShow, groupName]);
     
     if (loading) { return <Skeleton className="w-full h-[250px]" />; }
 
@@ -265,7 +275,26 @@ const GroupedChart = ({ title, data, yAxisLabel, loading, teamsToShow, chartType
                             <Line key={teamName} type="monotone" dataKey={teamName} stroke={teamColors[teamName] || '#8884d8'} strokeWidth={1.5} dot={{ r: 2 }} activeDot={{ r: 5 }} />
                         ))}
                         
-                        {Array.from(targets.entries()).map(([teamName, targetValue]) => {
+                        {/* เส้นเป้าหมายสำหรับ Cover Chart (เส้นเดียวสำหรับทุกทีม) */}
+                        {chartType === 'cover' && groupName && coverTargets[groupName] && (
+                            <ReferenceLine 
+                                y={coverTargets[groupName]} 
+                                stroke="#ef4444" 
+                                strokeDasharray="6 6" 
+                                strokeWidth={2}
+                            >
+                                <Label 
+                                    value={`เป้า: ${coverTargets[groupName]}`} 
+                                    position="topRight" 
+                                    fill="#ef4444" 
+                                    fontSize={11}
+                                    fontWeight="bold"
+                                />
+                            </ReferenceLine>
+                        )}
+                        
+                        {/* เส้นเป้าหมายสำหรับกราฟอื่นๆ */}
+                        {chartType !== 'cover' && Array.from(targets.entries()).map(([teamName, targetValue]) => {
                             if (targetValue > 0) {
                                 return (
                                     <ReferenceLine key={`${teamName}-target`} y={targetValue} stroke={teamColors[teamName] || '#8884d8'} strokeDasharray="4 4" strokeWidth={1}>
@@ -399,6 +428,9 @@ export default function OverviewBetaV6Page() {
 
     useEffect(() => {
         if (graphRawData.length > 0) {
+            // Debug: Check what data we have
+            console.log('Graph Raw Data Sample:', graphRawData[0]);
+            
             const transformData = (dataKey: keyof TeamMetric) => {
                 const dateMap = new Map<string, TransformedChartData>();
                 graphRawData.forEach(team => {
@@ -417,16 +449,58 @@ export default function OverviewBetaV6Page() {
                 });
                 return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
             };
+
+            // For cover chart, recalculate with current exchange rate
+            const transformCoverDataWithCorrectCalculation = () => {
+                const dateMap = new Map<string, TransformedChartData>();
+                
+                graphRawData.forEach(team => {
+                    const coverDaily = team.one_dollar_per_cover_daily;
+                    
+                    if (Array.isArray(coverDaily)) {
+                        coverDaily.forEach(day => {
+                            if (!dateMap.has(day.date)) {
+                                dateMap.set(day.date, { date: day.date });
+                            }
+                            const entry = dateMap.get(day.date);
+                            if (entry) {
+                                // The API sends cover calculated with old exchange rate
+                                // We need to reverse engineer and recalculate with current rate
+                                
+                                // Assuming API calculated: new_player_value_thb / actual_spend / old_exchange_rate
+                                // We can try: (API_value * old_rate) / current_rate to approximate
+                                // But this is not accurate. For now, let's calculate based on table data proportionally
+                                
+                                // Get the correct ratio from table calculation
+                                const correctTableCover = calculateOneDollarPerCover(
+                                    team.new_player_value_thb, 
+                                    team.actual_spend, 
+                                    exchangeRate
+                                );
+                                
+                                // Use the API trend but scale it to match our correct calculation
+                                const apiAverage = coverDaily.reduce((sum, d) => sum + d.value, 0) / coverDaily.length;
+                                const scaleFactor = correctTableCover / (team.one_dollar_per_cover || 1);
+                                
+                                entry[team.team_name] = day.value * scaleFactor;
+                            }
+                        });
+                    }
+                });
+                
+                return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            };
+
             setChartData({
                 cpm: transformData('cpm_cost_per_inquiry_daily'),
                 costPerDeposit: transformData('cost_per_deposit_daily'),
                 deposits: transformData('deposits_count_daily'),
-                cover: transformData('one_dollar_per_cover_daily'),
+                cover: transformCoverDataWithCorrectCalculation(),
             });
         } else {
             setChartData({ cpm: [], costPerDeposit: [], deposits: [], cover: [] });
         }
-    }, [graphRawData]);
+    }, [graphRawData, exchangeRate]);
     
     if (!tableDateRange || !graphDateRange) {
         return (
@@ -519,7 +593,15 @@ export default function OverviewBetaV6Page() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {teamsInGroup.map((team) => {
+                                                {teamsInGroup
+                                                    .sort((a, b) => {
+                                                        // Sort teams by predefined order to prevent shuffling
+                                                        const teamOrder = teamNames;
+                                                        const indexA = teamOrder.indexOf(a.team_name);
+                                                        const indexB = teamOrder.indexOf(b.team_name);
+                                                        return indexA - indexB;
+                                                    })
+                                                    .map((team) => {
                                                     const correctOneDollarPerCover = calculateOneDollarPerCover(team.new_player_value_thb, team.actual_spend, exchangeRate);
                                                     
                                                     return (

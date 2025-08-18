@@ -90,7 +90,16 @@ export const depositsMonthlyTargets: { [key: string]: number } = {
     'Barlance': 600,
     'Football Area': 900,
     'Football Area(Haru)': 450,
+
 };
+
+// เพิ่มบรรทัดนี้ในไฟล์ lib/config.ts
+export const coverTargets: { [key: string]: number } = {
+    'Lotto': 70,
+    'Bacarat': 25,
+    'Football': 25,
+};
+
 
 export const calculateDailyTarget = (monthlyTarget: number, dateString: string): number => {
     const totalDaysInMonth = dayjs(dateString).daysInMonth();
